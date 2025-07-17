@@ -8,7 +8,7 @@ from ..serializer import (
     CitySerializer,DistrictSerializer,PhotoSerializer,
     FeaturesCatSerializer,FeaturesSerializer,
     RatingSerializer,SharesSerializer,ViewsSerializer,LikeSerializer,
-    FavoritesSerializer,CommentSerializer,CustomUserSerializer,
+    FavoritesSerializer,CustomUserSerializer,
     NearbySerializer,NearbyListSerializer,LoginSerializer,RegisterSerializer
 )
 
@@ -331,43 +331,6 @@ nearby_doc = extend_schema_view(
         summary="Delete a nearby",
         responses={204: None}
     )
-)
-
-comment_doc = extend_schema_view(
-    list=extend_schema(
-        tags=["comments"],
-        summary="Comment list",
-        description="Returns all comment.",
-        responses={200: CommentSerializer(many=True)},
-    ),
-    retrieve=extend_schema(
-        tags=["comments"],
-        summary="Retrieve comment by ID",
-        responses={200: CommentSerializer}
-    ),
-    create=extend_schema(
-        tags=["comments"],
-        summary="Create a new comment",
-        request=CommentSerializer,
-        responses={201: CommentSerializer}
-    ),
-    update=extend_schema(
-        tags=["comments"],
-        summary="Update a comment",
-        request=CommentSerializer,
-        responses={200: CommentSerializer}
-    ),
-    partial_update=extend_schema(
-        tags=["comments"],
-        summary="Partially update a comment",
-        request=CommentSerializer,
-        responses={200: CommentSerializer}
-    ),
-    destroy=extend_schema(
-        tags=["comments"],
-        summary="Delete a comment",
-        responses={204: None}
-    ),
 )
 
 favorites_doc = extend_schema_view(

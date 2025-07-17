@@ -3,7 +3,7 @@ from .models import (
     ListingMod, CategoryMod, TypeSell,FeaturesCat,
     FeaturesMod, City, District, PhotoMod, RatingMod, 
     SharesMod, ViewsMod, LikeMod, FavoritesMod, 
-    CommentMod, NearbyListMod,NearbyMod,CustomUser,PhoneConfirmation
+    NearbyListMod,NearbyMod,CustomUser,PhoneConfirmation
 )
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -349,18 +349,6 @@ class FavoritesSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
     class Meta:
         model = FavoritesMod
-        fields = '__all__'
-    def get_listing_name(self,obj) -> str:
-        return obj.listing.title
-    
-    def get_user_name(self,obj) -> str:
-        return obj.user.name
-
-class CommentSerializer(serializers.ModelSerializer):
-    listing_name = serializers.SerializerMethodField()
-    user_name = serializers.SerializerMethodField()
-    class Meta:
-        model = CommentMod
         fields = '__all__'
     def get_listing_name(self,obj) -> str:
         return obj.listing.title

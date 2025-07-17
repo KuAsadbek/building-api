@@ -25,7 +25,6 @@ class CustomAPIRootView(APIRootView):
                 "views": base("views/"),
                 "like": base("like/"),
                 "favorites": base("favorites/"),
-                "comment": base("comment/"),
             }),
             "auth": OrderedDict({
                 "users": base("users/"),

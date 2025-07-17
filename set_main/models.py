@@ -245,18 +245,3 @@ class FavoritesMod(models.Model):
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
         ordering = ['-created_at']
-
-class CommentMod(models.Model):
-    listing = models.ForeignKey(ListingMod, on_delete=models.CASCADE)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    comment = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return str(self.listing)
-
-    class Meta:
-        verbose_name = 'Комментарий'
-        verbose_name_plural = 'Комментарии'
-        ordering = ['-created_at']

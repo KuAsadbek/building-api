@@ -5,7 +5,7 @@ from .views import (
     CityViewSet,DistrictViewSet,PhotoViewSet,
     FeaturesCatViewSet,FeaturesViewSet,
     RatingViewSet,SharesViewSet,ViewsViewSet,LikeViewSet,
-    FavoritesViewSet,CommentViewSet,AuthViewSet,
+    FavoritesViewSet,AuthViewSet,
     NearbyViewSet,NearbyListViewSet,DashboardViewSet,CustomUserViewSet,
     SendCodeViewSet
 )
@@ -32,7 +32,6 @@ router.register(r'shares',SharesViewSet,basename='shares')
 router.register(r'views',ViewsViewSet,basename='views')
 router.register(r'like',LikeViewSet,basename='like')
 router.register(r'favorites',FavoritesViewSet,basename='favorites')
-router.register(r'comment',CommentViewSet,basename='comment')
 router.register(r'auth',AuthViewSet,basename='auth')
 
 urlpatterns = [

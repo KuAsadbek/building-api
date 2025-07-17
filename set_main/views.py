@@ -17,7 +17,7 @@ from .models import (
     City,District,PhotoMod,
     FeaturesCat,FeaturesMod,
     RatingMod,SharesMod,ViewsMod,LikeMod,
-    FavoritesMod,CommentMod,CustomUser,PhoneConfirmation,
+    FavoritesMod,CustomUser,PhoneConfirmation,
     NearbyListMod,NearbyMod
 )
 from .serializer import (
@@ -25,7 +25,7 @@ from .serializer import (
     CitySerializer,DistrictSerializer,PhotoSerializer,
     FeaturesCatSerializer,FeaturesSerializer,
     RatingSerializer,SharesSerializer,ViewsSerializer,LikeSerializer,
-    FavoritesSerializer,CommentSerializer,
+    FavoritesSerializer,
     NearbySerializer,NearbyListSerializer,LoginSerializer,RegisterSerializer,
     CustomUserSerializer,CustomUserCreateSerializer,ConfirmRegisterSerializer
 )
@@ -201,8 +201,3 @@ class LikeViewSet(CustomResponseMixin,ModelViewSet):
 class FavoritesViewSet(CustomResponseMixin,ModelViewSet):
     queryset = FavoritesMod.objects.all()
     serializer_class = FavoritesSerializer
-
-@docs.comment_doc
-class CommentViewSet(CustomResponseMixin,ModelViewSet):
-    queryset = CommentMod.objects.all()
-    serializer_class = CommentSerializer

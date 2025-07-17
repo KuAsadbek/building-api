@@ -17,7 +17,7 @@ from set_main.models import (
     City,District,PhotoMod,
     FeaturesCat,FeaturesMod,
     RatingMod,SharesMod,ViewsMod,LikeMod,
-    FavoritesMod,CommentMod,CustomUser,PhoneConfirmation,
+    FavoritesMod,CustomUser,PhoneConfirmation,
     NearbyListMod,NearbyMod
 )
 

@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     CustomUser, TypeSell, CategoryMod, ListingMod, City, District,
     PhotoMod, RatingMod, SharesMod, ViewsMod,
-    LikeMod, FavoritesMod, CommentMod,FeaturesCat,FeaturesMod,PhoneConfirmation
+    LikeMod, FavoritesMod,FeaturesCat,FeaturesMod,PhoneConfirmation
 )
 
 @admin.register(PhoneConfirmation)
@@ -72,7 +72,3 @@ class LikeAdmin(admin.ModelAdmin):
 class FavoritesAdmin(admin.ModelAdmin):
     list_display = ('listing', 'user', 'created_at')
 
-@admin.register(CommentMod)
-class CommentAdmin(admin.ModelAdmin):
-    list_display = ('listing', 'user', 'comment', 'created_at')
-    search_fields = ('comment',)

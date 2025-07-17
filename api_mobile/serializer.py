@@ -3,7 +3,7 @@ from set_main.models import (
     ListingMod, CategoryMod, TypeSell,FeaturesCat,
     FeaturesMod, City, District, PhotoMod, RatingMod, 
     SharesMod, ViewsMod, LikeMod, FavoritesMod, 
-    CommentMod, NearbyListMod,NearbyMod
+    NearbyListMod,NearbyMod
 )
 from django.contrib.auth.models import User
 
