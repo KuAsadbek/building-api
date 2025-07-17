@@ -88,18 +88,39 @@ class DashboardViewSet(ViewSet):
 
 @docs.login_doc
 class AuthViewSet(CustomResponseMixin,ViewSet):
-    @action(detail=False, methods=['post'], url_path='register')
-    def register(self, request):
-        serializer = RegisterSerializer(data=request.data)
+    @action(detail=False, methods=['post'], url_path='login')
+    def login(self, request):
+        serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
+            user = serializer.validated_data
             refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            return Response({
-                "user": CustomUserSerializer(user).data,
-                "access": access_token,
-                "refresh": str(refresh)
-            }, status=status.HTTP_201_CREATED)
+
+            response = Response({
+                'message': 'Успешный вход',
+                'user': CustomUserSerializer(user).data
+            }, status=status.HTTP_200_OK)
+
+            # Устанавливаем токены в HTTP-only cookies
+            response.set_cookie(
+                key='access_token',
+                value=str(refresh.access_token),
+                httponly=True,
+                secure=True,            # True если используешь HTTPS
+                samesite='Lax',         # или 'Strict'
+                max_age=3600            # 1 час
+            )
+
+            response.set_cookie(
+                key='refresh_token',
+                value=str(refresh),
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=7 * 24 * 3600   # 7 дней
+            )
+
+            return response
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'], url_path='login')
@@ -108,12 +129,44 @@ class AuthViewSet(CustomResponseMixin,ViewSet):
         if serializer.is_valid():
             user = serializer.validated_data
             refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'user': CustomUserSerializer(user).data  # 👈 возвращаем данные пользователя
+
+            response = Response({
+                'message': 'Успешный вход',
+                'user': CustomUserSerializer(user).data
             }, status=status.HTTP_200_OK)
+
+            # Устанавливаем токены в HTTP-only cookies
+            response.set_cookie(
+                key='access_token',
+                value=str(refresh.access_token),
+                httponly=True,
+                secure=True,            # True если используешь HTTPS
+                samesite='Lax',         # или 'Strict'
+                max_age=3600            # 1 час
+            )
+
+            response.set_cookie(
+                key='refresh_token',
+                value=str(refresh),
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=7 * 24 * 3600   # 7 дней
+            )
+
+            return response
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['post'], url_path='logout')
+    def logout(self, request):
+        response = Response({"message": "Вы успешно вышли"}, status=status.HTTP_200_OK)
+
+        # Удаляем cookies
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
+
+        return response
 
 @docs.nearby_doc
 class NearbyViewSet(CustomResponseMixin,ModelViewSet):
