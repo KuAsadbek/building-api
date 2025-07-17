@@ -3,8 +3,10 @@ from set_main.models import (
     ListingMod, CategoryMod, TypeSell,FeaturesCat,
     FeaturesMod, City, District, PhotoMod, RatingMod, 
     SharesMod, ViewsMod, LikeMod, FavoritesMod, 
-    NearbyListMod,NearbyMod
+    NearbyListMod,NearbyMod,CurrencyRate
 )
+from datetime import date
+from decimal import Decimal
 from django.contrib.auth.models import User
 
 class PhotoMobSerializer(serializers.ModelSerializer):
@@ -48,6 +50,43 @@ class ListingMobSerializer(serializers.ModelSerializer):
             'rating_count', 'favorite_count',
             'created_at',
         ]
+
+    def get_language(self):
+        # Пример: получаем язык из контекста запроса
+        return self.context.get('lang', 'uz')
+
+    def get_price(self, obj) -> dict:
+        lang = self.get_language()  # 'uz', 'ru', 'en'
+
+        # Определим в какую валюту нужно конвертировать
+        target_currency = {
+            'uz': 'UZS',
+            'ru': 'RUB',
+            'en': 'USD'
+        }.get(lang, 'UZS')
+
+        # Получаем курс нужной валюты на сегодня
+        today = date.today()
+        try:
+            target_rate = CurrencyRate.objects.get(currency=target_currency, date=today).rate
+        except CurrencyRate.DoesNotExist:
+            target_rate = Decimal(1)  # Fallback
+
+        try:
+            base_rate = obj.currency.rate if obj.currency else Decimal(1)
+        except:
+            base_rate = Decimal(1)
+
+        # Конвертация
+        if base_rate == 0:
+            converted_price = Decimal(0)
+        else:
+            converted_price = (obj.price / base_rate) * Decimal(target_rate)
+
+        return {
+            'currency': target_currency,
+            'amount': round(converted_price, 2)
+        }
         
     def get_language(self):
         request = self.context.get('request')
@@ -123,19 +162,6 @@ class ListingMobSerializer(serializers.ModelSerializer):
             }
             for feature in features
         ]
-        
-    def get_price(self, obj) -> dict:
-        lang = self.get_language()
-        price = {
-            'uz': obj.price_usd,
-            'ru': obj.price_rub,
-            'en': obj.price_uzs,
-        }
-        context = {
-            'lang':lang,
-            'price': price[lang]
-        }
-        return context
 
     def get_category(self, obj) -> dict:
         lang = self.get_language()

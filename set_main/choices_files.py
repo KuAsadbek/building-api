@@ -8,11 +8,6 @@ ROLE_CHOICES = [
     ('admin', 'Admin'),
     ('user', 'User'),
 ]
-CURRENCY_CHOICES = [
-    ('USD', 'USD'),
-    ('EUR', 'EUR'),
-    ('RUB', 'RUB'),
-]
 
 LANGUAGE_CHOICES = (
     ('ru', 'Russian'),

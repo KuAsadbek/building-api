@@ -1,17 +1,20 @@
 import random
-from django.utils import timezone
 from datetime import timedelta
-from rest_framework import status
+
+from django.utils import timezone
 from django.shortcuts import render
+from django.contrib.auth import authenticate
+
+from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet,ViewSet
-
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
 
-from rest_framework.views import APIView
-
+from .send_mes import send_sms
+from .docs import load as docs
+from api_mobile.utils.mixins import CustomResponseMixin
 from .models import (
     ListingMod,CategoryMod,TypeSell,
     City,District,PhotoMod,
@@ -29,9 +32,6 @@ from .serializer import (
     NearbySerializer,NearbyListSerializer,LoginSerializer,RegisterSerializer,
     CustomUserSerializer,CustomUserCreateSerializer,ConfirmRegisterSerializer
 )
-from .send_mes import send_sms
-from api_mobile.utils.mixins import CustomResponseMixin
-from .docs import load as docs
 
 @docs.sms_doc
 class SendCodeViewSet(ViewSet):
@@ -39,29 +39,29 @@ class SendCodeViewSet(ViewSet):
     def verify_code(self, request):
         phone = request.data.get("phone")
         code = request.data.get("code")
-
         if not phone or not code:
             return Response({"detail": "Номер телефона и код обязательны"}, status=400)
-
+        
         try:
             conf = PhoneConfirmation.objects.get(phone=phone, code=code)
         except PhoneConfirmation.DoesNotExist:
             return Response({"detail": "Неверный код подтверждения"}, status=400)
-
+        
         if conf.is_expired():
             return Response({"detail": "Код подтверждения истёк"}, status=400)
-
+        
         return Response({"detail": "Код подтверждён"}, status=200)
+    
     @action(detail=False, methods=['post'], url_path='send-code')
     def send_code(self, request):
         phone = request.data.get("phone")
         if not phone:
             return Response({"detail": "Номер телефона обязателен"}, status=400)
-
+        
         existing = PhoneConfirmation.objects.filter(phone=phone).first()
         if existing and existing.created_at > timezone.now() - timedelta(minutes=1):
             return Response({"detail": "Код уже отправлен. Повторите через 1 минуту."}, status=429)
-
+        
         code = f"{random.randint(100000, 999999)}"
         PhoneConfirmation.objects.update_or_create(phone=phone, defaults={"code": code, "created_at": timezone.now()})
         send_sms(phone, f"Код подтверждения для регистрации на сайте Building.uz: {code}:")
@@ -139,6 +139,18 @@ class FeaturesViewSet(CustomResponseMixin,ModelViewSet):
 class ListingViewSet(CustomResponseMixin,ModelViewSet):
     queryset = ListingMod.objects.all()
     serializer_class = ListingSerializer
+
+    # def get_serializer_context(self):
+    #     context = super().get_serializer_context()
+    #     context['lang'] = self.request.LANGUAGE_CODE  # или см. ниже альтернативу
+    #     return context
+    
+    #request.LANGUAGE_CODE ЕСЛИ НЕ РАБОТАЕТ
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        lang = self.request.headers.get('Accept-Language', 'uz')[:2].lower()
+        context['lang'] = lang if lang in ['uz', 'ru', 'en'] else 'uz'
+        return context
 
     @docs.promote_doc
     @action(detail=True, methods=['post'], url_path='promote')

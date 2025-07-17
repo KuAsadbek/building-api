@@ -2,102 +2,85 @@ import requests
 import time
 import json
 
-COUNTRY = 'Uzbekistan'
 BASE_URL = 'https://nominatim.openstreetmap.org/search'
-HEADERS = {
-    'User-Agent': 'StayGlobalParser/1.0'
-}
+
+HEADERS = {'User-Agent': 'StayGlobalParser/1.0'}
 
 def sleep(ms):
     time.sleep(ms / 1000)
 
-def fetch_children(lat, lon, parent_id, type_):
-    sleep(1000)  # пауза, чтобы не перегружать API
-    try:
-        params = {
-            'q': '',
-            'format': 'json',
-            'addressdetails': 1,
-            'polygon_geojson': 0,
-            'extratags': 1,
-            'viewbox': f"{float(lon) - 1},{float(lat) - 1},{float(lon) + 1},{float(lat) + 1}",
-            'bounded': 1
-        }
-        response = requests.get(BASE_URL, params=params, headers=HEADERS)
-        response.raise_for_status()
+def fetch_admin(parent_name, parent_id, admin_level):
+    """
+    Поиск административных единиц по названию и уровню.
+    """
+    sleep(2000)  # пауза между запросами
+    print(f"\n🔍 Fetching level {admin_level} for: {parent_name}")
 
-        data = response.json()
+    response = requests.get(BASE_URL, params={
+        'q': parent_name,
+        'format': 'json',
+        'addressdetails': 1,
+        'limit': 10
+    }, headers=HEADERS)
 
-        regions = []
-        id_counter = parent_id * 1000  # простой генератор id
+    response.raise_for_status()
+    data = response.json()
 
-        for item in data:
-            if (
-                item.get('type') == type_ and
-                'address' in item and
-                ('state' in item['address'] or 'county' in item['address'])
-            ):
-                name = item['display_name'].split(',')[0]
-                region = {
-                    'id': id_counter,
+    result = []
+    idx = parent_id * 1000 + admin_level
+
+    for item in data:
+        if item.get('class') == 'boundary' and item.get('type') == 'administrative':
+            address = item.get('address', {})
+            level = address.get('admin_level') or item.get('extratags', {}).get('admin_level')
+
+            if str(level) == str(admin_level):
+                name = item['display_name'].split(',')[0].strip()
+                idx += 1
+                result.append({
+                    'id': idx,
                     'name': name,
-                    'type': type_,
+                    'admin_level': int(admin_level),
                     'parent_id': parent_id,
-                    'coordinates': {
-                        'lat': item['lat'],
-                        'lon': item['lon']
-                    }
-                }
-                regions.append(region)
-                print(f"Found region: {name}")
-                id_counter += 1
+                    'lat': item['lat'],
+                    'lon': item['lon']
+                })
+                print(f"→ Level {admin_level}: {name}")
+    return result
 
-        return regions
-    except Exception as e:
-        print(f"Error fetching children: {e}")
-        return []
+def run(parser_file='locations.json'):
+    print("📦 Starting location collection for Uzbekistan")
 
-def fetch_regions(country):
-    try:
-        params = {
-            'q': country,
-            'format': 'json',
-            'addressdetails': 1,
-            'polygon_geojson': 0,
-            'limit': 1
-        }
-        response = requests.get(BASE_URL, params=params, headers=HEADERS)
-        response.raise_for_status()
+    # Получаем страну
+    r = requests.get(BASE_URL, params={'q': 'Uzbekistan', 'format': 'json', 'limit': 1}, headers=HEADERS)
+    r.raise_for_status()
+    c = r.json()[0]
 
-        country_data = response.json()[0]
-        country_id = 1
+    country = {
+        'id': 1,
+        'name': 'Oʻzbekiston',
+        'admin_level': 2,
+        'parent_id': None,
+        'lat': c['lat'],
+        'lon': c['lon']
+    }
 
-        result = [{
-            'id': country_id,
-            'name': country_data['display_name'],
-            'type': 'country',
-            'parent_id': None,
-            'coordinates': {
-                'lat': country_data['lat'],
-                'lon': country_data['lon']
-            }
-        }]
+    print(f"\n🌍 Country: {country['name']}")
 
-        print(f"Found country: {country_data['display_name']}")
+    # Получаем области
+    oblasts = fetch_admin("Uzbekistan", 1, admin_level=4)
 
-        oblasts = fetch_children(country_data['lat'], country_data['lon'], country_id, 'administrative')
-        result.extend(oblasts)
+    # Получаем районы для каждой области
+    districts = []
+    for obl in oblasts:
+        districts += fetch_admin(obl['name'], obl['id'], admin_level=6)
 
-        return result
-    except Exception as e:
-        print(f"Error fetching country data: {e}")
-        return []
-
-def run():
-    data = fetch_regions(COUNTRY)
-    with open('locations.json', 'w', encoding='utf-8') as f:
+    # Объединяем и сохраняем
+    data = [country] + oblasts + districts
+    with open(parser_file, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    print('Data saved to locations.json')
+
+    print(f"\n✅ Готово. Сохранено в файл {parser_file}")
 
 if __name__ == '__main__':
     run()

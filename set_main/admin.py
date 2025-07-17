@@ -1,9 +1,15 @@
 from django.contrib import admin
 from .models import (
     CustomUser, TypeSell, CategoryMod, ListingMod, City, District,
-    PhotoMod, RatingMod, SharesMod, ViewsMod,
+    PhotoMod, RatingMod, SharesMod, ViewsMod,CurrencyRate,
     LikeMod, FavoritesMod,FeaturesCat,FeaturesMod,PhoneConfirmation
 )
+
+
+@admin.register(CurrencyRate)
+class CurrencyRateAdmin(admin.ModelAdmin):
+    list_display = ('currency', 'rate', 'date')
+    list_filter = ('currency', 'date')
 
 @admin.register(PhoneConfirmation)
 class PhoneConfirmationModAdmin(admin.ModelAdmin):
@@ -43,7 +49,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(ListingMod)
 class ListingAdmin(admin.ModelAdmin):
-    list_display = ('title', 'user', 'price_usd', 'city', 'district', 'status', 'created_at')
+    list_display = ('title', 'user', 'price', 'city', 'district', 'status', 'created_at')
     list_filter = ('status', 'city', 'district', 'category')
     search_fields = ('title', 'description', 'user__username')
     autocomplete_fields = ('user',)

@@ -5,6 +5,26 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.utils import timezone
 from datetime import timedelta
 
+class CurrencyRate(models.Model):
+    CURRENCY_CHOICES = [
+        ('USD', '🇺🇸 Доллар США'),
+        ('RUB', '🇷🇺 Российский рубль'),
+        ('UZS', '🇺🇿 Сум (базовая валюта)'),
+    ]
+    
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
+    rate = models.DecimalField(max_digits=12, decimal_places=4)
+    date = models.DateField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('currency', 'date')
+        verbose_name = 'Курс валюты'
+        verbose_name_plural = 'Курсы валют'
+
+    def __str__(self):
+        return f"{self.currency} - {self.rate} на {self.date}"
+
+
 class PhoneConfirmation(models.Model):
     phone = models.CharField(max_length=20, unique=True)
     code = models.CharField(max_length=6)
@@ -131,9 +151,8 @@ class ListingMod(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     description = models.TextField()
-    price_usd = models.DecimalField(max_digits=10, decimal_places=2)
-    price_uzs = models.DecimalField(max_digits=10, decimal_places=2)
-    price_rub = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.ForeignKey(CurrencyRate, on_delete=models.SET_NULL, null=True)
     area = models.DecimalField(max_digits=10, decimal_places=2)
     age = models.PositiveIntegerField()
     rooms = models.PositiveIntegerField()
@@ -144,9 +163,9 @@ class ListingMod(models.Model):
     parking = models.BooleanField(default=False)
     city = models.ForeignKey(City, on_delete=models.SET_NULL, null=True)
     district = models.ForeignKey(District, on_delete=models.SET_NULL, null=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    types = models.ForeignKey(TypeSell, on_delete=models.CASCADE, null=True)
+    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    types = models.ForeignKey(TypeSell, on_delete=models.CASCADE, null=True,verbose_name='Тип недвижимости') #property_type
     category = models.ForeignKey(CategoryMod, on_delete=models.SET_NULL, null=True)
     status = models.BooleanField(default=False)
     video = models.FileField(upload_to='listing_videos/', blank=True, null=True)
